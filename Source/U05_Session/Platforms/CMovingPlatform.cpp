@@ -33,9 +33,23 @@ void ACMovingPlatform::BeginPlay()
 	GlobalTargetLocation = GetTransform().TransformPosition(TargetLocation);
 }
 
+void ACMovingPlatform::IncreaseActive()
+{
+	Active++;
+}
+
+void ACMovingPlatform::DecreaseActive()
+{
+	if (Active > 0)
+		Active--;
+}
+
 void ACMovingPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//Active가 1이상인 경우에만
+	CheckFalse(Active > 0);
 
 	//서버에서만 이동
 	if (HasAuthority() == true)
