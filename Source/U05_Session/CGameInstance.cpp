@@ -1,15 +1,13 @@
 #include "CGameInstance.h"
 #include "Global.h"
 #include "Blueprint/UserWidget.h"
+#include "Widgets/CMenu.h"
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& ObjectInitializer)
 {
 	CLog::Log("GameInstance::Constructor Called");
 
-	TSubclassOf<UUserWidget> menuWidgetClass;
-	CHelpers::GetClass(&menuWidgetClass, "/Game/Widgets/WB_Menu");
-	CLog::Log(menuWidgetClass->GetName());
-	
+	CHelpers::GetClass(&MenuWidgetClass, "/Game/Widgets/WB_Menu");
 }
 
 void UCGameInstance::Init()
@@ -20,13 +18,26 @@ void UCGameInstance::Init()
 
 }
 
+void UCGameInstance::LoadMenu()
+{
+	CheckNull(MenuWidgetClass);
+
+	Menu = CreateWidget<UCMenu>(this, MenuWidgetClass);
+	CheckNull(Menu);
+
+	Menu->SetOwingGameInstance(this);
+	Menu->Attach();
+}
+
 void UCGameInstance::Host()
 {
+	if (!!Menu)
+		Menu->Detach();
+
 	CLog::Print("Host");
-	
+
 	UWorld* world = GetWorld();
 	CheckNull(world);
-
 	world->ServerTravel("/Game/Maps/Play?listen");
 }
 
