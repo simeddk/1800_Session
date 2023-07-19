@@ -2,12 +2,14 @@
 #include "Global.h"
 #include "Blueprint/UserWidget.h"
 #include "Widgets/CMenu.h"
+#include "Widgets/CMenuBase.h"
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& ObjectInitializer)
 {
 	CLog::Log("GameInstance::Constructor Called");
 
 	CHelpers::GetClass(&MenuWidgetClass, "/Game/Widgets/WB_Menu");
+	CHelpers::GetClass(&InGameWidgetClass, "/Game/Widgets/WB_InGame");
 }
 
 void UCGameInstance::Init()
@@ -29,6 +31,17 @@ void UCGameInstance::LoadMenu()
 	Menu->Attach();
 }
 
+void UCGameInstance::LoadInGameMenu()
+{
+	CheckNull(InGameWidgetClass);
+
+	UCMenuBase* inGameWidget = CreateWidget<UCMenuBase>(this, InGameWidgetClass);
+	CheckNull(inGameWidget);
+
+	inGameWidget->SetOwingGameInstance(this);
+	inGameWidget->Attach();
+}
+
 void UCGameInstance::Host()
 {
 	if (!!Menu)
@@ -44,6 +57,9 @@ void UCGameInstance::Host()
 void UCGameInstance::Join(const FString& InAddress)
 {
 	CLog::Print("Join to " + InAddress);
+
+	if (!!Menu)
+		Menu->Detach();
 
 	APlayerController* controller = GetFirstLocalPlayerController();
 	CheckNull(controller);
