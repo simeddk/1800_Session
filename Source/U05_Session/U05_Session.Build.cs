@@ -16,6 +16,7 @@ public class U05_Session : ModuleRules
 			"InputCore",
 			"HeadMountedDisplay", 
 			"UMG",
+			"OnlineSubSystem"
 		});
 	}
 }
