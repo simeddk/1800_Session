@@ -2,7 +2,14 @@
 #include "Global.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
-#include "Components/EditableTextBox.h"
+#include "Components/ScrollBox.h"
+#include "Components/TextBlock.h"
+#include "CSessionRow.h"
+
+UCMenu::UCMenu(const FObjectInitializer& ObjectInitializer)
+{
+	CHelpers::GetClass(&SessionRowClass, "/Game/Widgets/WB_SessionRow");
+}
 
 bool UCMenu::Initialize()
 {
@@ -27,6 +34,11 @@ bool UCMenu::Initialize()
 	return true;
 }
 
+void UCMenu::SetSessionList(TArray<FString> InSessionIDs)
+{
+	//Todo. JoinServer의 코드를 여기로 이관
+}
+
 void UCMenu::HostServer()
 {
 	CheckNull(OwingGameInstance);
@@ -37,11 +49,14 @@ void UCMenu::HostServer()
 void UCMenu::JoinServer()
 {
 	CheckNull(OwingGameInstance);
-	CheckNull(IPAddressField);
+	
+	UWorld* world =  GetWorld();
+	CheckNull(world);
 
-	const FString& address = IPAddressField->GetText().ToString();
+	UCSessionRow* sessionRow = CreateWidget<UCSessionRow>(world, SessionRowClass);
+	CheckNull(sessionRow);
 
-	OwingGameInstance->Join(address);
+	SessionList->AddChild(sessionRow);
 }
 
 void UCMenu::OpenJoinMenu()

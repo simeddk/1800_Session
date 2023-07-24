@@ -33,7 +33,18 @@ void UCGameInstance::Init()
 		{
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnCreateSessionComplete);
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnDestroySessionComplete);
+			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UCGameInstance::OnFindSessionComplete);
 
+			
+			//Find Session
+			SessionSearch = MakeShareable(new FOnlineSessionSearch());
+			if (SessionSearch.IsValid())
+			{
+				CLog::Log("Starting Find Session");
+
+				SessionSearch->bIsLanQuery = true;
+				SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+			}
 		}
 		
 	}
@@ -84,8 +95,15 @@ void UCGameInstance::Host()
 
 void UCGameInstance::CreateSession()
 {
-	FOnlineSessionSettings sessionSettings;
-	SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
+	if (SessionInterface.IsValid())
+	{
+		FOnlineSessionSettings sessionSettings;
+		sessionSettings.bIsLANMatch = true;
+		sessionSettings.NumPublicConnections = 5;
+		sessionSettings.bShouldAdvertise = true;
+
+		SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
+	}
 }
 
 void UCGameInstance::Join(const FString& InAddress)
@@ -109,8 +127,6 @@ void UCGameInstance::ReturnToMainMenu()
 
 void UCGameInstance::OnCreateSessionComplete(FName InSessionName, bool InSuccess)
 {
-	UE_LOG(LogTemp, Error, TEXT("CreateSessionComplete")); //<-
-
 	//技记 积己 角菩
 	if (InSuccess == false)
 	{
@@ -133,9 +149,24 @@ void UCGameInstance::OnCreateSessionComplete(FName InSessionName, bool InSuccess
 
 void UCGameInstance::OnDestroySessionComplete(FName InSessionName, bool InSuccess)
 {
-	UE_LOG(LogTemp, Error, TEXT("DestroySessionComplete")); //<-
-
 	if (InSuccess == true)
 		CreateSession();
+}
+
+void UCGameInstance::OnFindSessionComplete(bool InSuccess)
+{
+	if (InSuccess == true && SessionSearch.IsValid())
+	{
+		CLog::Log("Finished Find Sessoin");
+
+		CLog::Log("==========<Find Session Results>==========");
+		for (const auto& searchResult : SessionSearch->SearchResults)
+		{
+			CLog::Log(" -> Session ID : " + searchResult.GetSessionIdStr());
+			CLog::Log(" -> Ping : " + FString::FromInt(searchResult.PingInMs));
+		}
+		CLog::Log("===========================================");
+
+	}
 }
 

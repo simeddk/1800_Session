@@ -9,8 +9,14 @@ class U05_SESSION_API UCMenu : public UCMenuBase
 {
 	GENERATED_BODY()
 
+public:
+	UCMenu(const FObjectInitializer& ObjectInitializer);
+
 protected:
 	virtual bool Initialize() override;
+
+public:
+	void SetSessionList(TArray<FString> InSessionIDs);
 
 private:
 	UFUNCTION()
@@ -55,7 +61,8 @@ private:
 		class UWidget* JoinMenu;
 
 	UPROPERTY(meta = (BindWidget))
-		class UEditableTextBox* IPAddressField;
+		class UScrollBox* SessionList;
 
-
+private:
+	TSubclassOf<class UUserWidget> SessionRowClass;
 };
