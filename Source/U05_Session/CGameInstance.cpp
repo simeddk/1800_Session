@@ -34,17 +34,6 @@ void UCGameInstance::Init()
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnCreateSessionComplete);
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnDestroySessionComplete);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UCGameInstance::OnFindSessionComplete);
-
-			
-			//Find Session
-			SessionSearch = MakeShareable(new FOnlineSessionSearch());
-			if (SessionSearch.IsValid())
-			{
-				CLog::Log("Starting Find Session");
-
-				SessionSearch->bIsLanQuery = true;
-				SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
-			}
 		}
 		
 	}
@@ -110,12 +99,15 @@ void UCGameInstance::Join(const FString& InAddress)
 {
 	CLog::Print("Join to " + InAddress);
 
-	if (!!Menu)
+	/*if (!!Menu)
 		Menu->Detach();
 
 	APlayerController* controller = GetFirstLocalPlayerController();
 	CheckNull(controller);
-	controller->ClientTravel(InAddress, ETravelType::TRAVEL_Absolute);
+	controller->ClientTravel(InAddress, ETravelType::TRAVEL_Absolute);*/
+
+	if (!!Menu)
+		Menu->SetSessionList({"Session1", "Session2"});
 }
 
 void UCGameInstance::ReturnToMainMenu()
@@ -123,6 +115,18 @@ void UCGameInstance::ReturnToMainMenu()
 	APlayerController* controller = GetFirstLocalPlayerController();
 	CheckNull(controller);
 	controller->ClientTravel("/Game/Maps/MainMenu", ETravelType::TRAVEL_Absolute);
+}
+
+void UCGameInstance::FindSession()
+{
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	if (SessionSearch.IsValid())
+	{
+		CLog::Log("Starting Find Session");
+
+		SessionSearch->bIsLanQuery = true;
+		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+	}
 }
 
 void UCGameInstance::OnCreateSessionComplete(FName InSessionName, bool InSuccess)
@@ -155,8 +159,12 @@ void UCGameInstance::OnDestroySessionComplete(FName InSessionName, bool InSucces
 
 void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 {
-	if (InSuccess == true && SessionSearch.IsValid())
+	if (InSuccess == true && 
+		Menu != nullptr &&
+		SessionSearch.IsValid())
 	{
+		TArray<FString> foundSession;
+		
 		CLog::Log("Finished Find Sessoin");
 
 		CLog::Log("==========<Find Session Results>==========");
@@ -164,9 +172,13 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 		{
 			CLog::Log(" -> Session ID : " + searchResult.GetSessionIdStr());
 			CLog::Log(" -> Ping : " + FString::FromInt(searchResult.PingInMs));
+
+			foundSession.Add(searchResult.GetSessionIdStr());
 		}
 		CLog::Log("===========================================");
 
+
+		Menu->SetSessionList(foundSession);
 	}
 }
 

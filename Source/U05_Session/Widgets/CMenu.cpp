@@ -36,7 +36,27 @@ bool UCMenu::Initialize()
 
 void UCMenu::SetSessionList(TArray<FString> InSessionIDs)
 {
-	//Todo. JoinServer의 코드를 여기로 이관
+	UWorld* world = GetWorld();
+	CheckNull(world);
+
+	SessionList->ClearChildren();
+
+	uint32 i = 0;
+	for (const auto& id : InSessionIDs)
+	{
+		UCSessionRow* sessionRow = CreateWidget<UCSessionRow>(world, SessionRowClass);
+		CheckNull(sessionRow);
+
+		sessionRow->SessionName->SetText(FText::FromString(id));
+		sessionRow->SetSelfIndex(this, i++);
+
+		SessionList->AddChild(sessionRow);
+	}
+}
+
+void UCMenu::SetSelectedRowIndex(uint32 InIndex)
+{
+	SelectedRowIndex = InIndex;
 }
 
 void UCMenu::HostServer()
@@ -50,13 +70,16 @@ void UCMenu::JoinServer()
 {
 	CheckNull(OwingGameInstance);
 	
-	UWorld* world =  GetWorld();
-	CheckNull(world);
+	if (SelectedRowIndex.IsSet())
+	{
+		CLog::Log("SelectedRowIndex : " + FString::FromInt(SelectedRowIndex.GetValue()));
+	}
+	else
+	{
+		CLog::Log("SelectedRowIndex is not set");
+	}
 
-	UCSessionRow* sessionRow = CreateWidget<UCSessionRow>(world, SessionRowClass);
-	CheckNull(sessionRow);
-
-	SessionList->AddChild(sessionRow);
+	OwingGameInstance->Join("");
 }
 
 void UCMenu::OpenJoinMenu()
@@ -65,6 +88,9 @@ void UCMenu::OpenJoinMenu()
 	CheckNull(JoinMenu);
 
 	MenuSwitcher->SetActiveWidget(JoinMenu);
+
+	if (!!OwingGameInstance)
+		OwingGameInstance->FindSession();
 }
 
 void UCMenu::OpenMainMenu()
