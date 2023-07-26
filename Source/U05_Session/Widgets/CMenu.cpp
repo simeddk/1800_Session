@@ -73,13 +73,15 @@ void UCMenu::JoinServer()
 	if (SelectedRowIndex.IsSet())
 	{
 		CLog::Log("SelectedRowIndex : " + FString::FromInt(SelectedRowIndex.GetValue()));
+		
+		OwingGameInstance->Join(SelectedRowIndex.GetValue());
 	}
 	else
 	{
 		CLog::Log("SelectedRowIndex is not set");
 	}
 
-	OwingGameInstance->Join("");
+	
 }
 
 void UCMenu::OpenJoinMenu()

@@ -34,6 +34,7 @@ void UCGameInstance::Init()
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnCreateSessionComplete);
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnDestroySessionComplete);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UCGameInstance::OnFindSessionComplete);
+			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnJoinSessionComplete);
 		}
 		
 	}
@@ -95,19 +96,15 @@ void UCGameInstance::CreateSession()
 	}
 }
 
-void UCGameInstance::Join(const FString& InAddress)
+void UCGameInstance::Join(uint32 InSessionIndex)
 {
-	CLog::Print("Join to " + InAddress);
-
-	/*if (!!Menu)
-		Menu->Detach();
-
-	APlayerController* controller = GetFirstLocalPlayerController();
-	CheckNull(controller);
-	controller->ClientTravel(InAddress, ETravelType::TRAVEL_Absolute);*/
+	CheckFalse(SessionInterface.IsValid());
+	CheckFalse(SessionSearch.IsValid());
 
 	if (!!Menu)
-		Menu->SetSessionList({"Session1", "Session2"});
+		Menu->Detach();
+
+	SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[InSessionIndex]);
 }
 
 void UCGameInstance::ReturnToMainMenu()
@@ -180,5 +177,31 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 
 		Menu->SetSessionList(foundSession);
 	}
+}
+
+void UCGameInstance::OnJoinSessionComplete(FName InSessionName, EOnJoinSessionCompleteResult::Type InResult)
+{
+	FString address;
+
+	//조인 실패 시
+	if (SessionInterface->GetResolvedConnectString(InSessionName, address) == false)
+	{
+		switch (InResult)
+		{
+			case EOnJoinSessionCompleteResult::SessionIsFull:			CLog::Log("SessionIsFull");				break;
+			case EOnJoinSessionCompleteResult::SessionDoesNotExist:		CLog::Log("SessionDoesNotExist");		break;
+			case EOnJoinSessionCompleteResult::CouldNotRetrieveAddress: CLog::Log("CouldNotRetrieveAddress");	break;
+			case EOnJoinSessionCompleteResult::AlreadyInSession:		CLog::Log("AlreadyInSession");			break;
+			case EOnJoinSessionCompleteResult::UnknownError:			CLog::Log("UnknownError");				break;
+		}
+		return;
+	}
+
+	//조인 성공 시
+	CLog::Print("Join to " + address);
+
+	APlayerController* controller = GetFirstLocalPlayerController();
+	CheckNull(controller);
+	controller->ClientTravel(address, ETravelType::TRAVEL_Absolute);
 }
 
