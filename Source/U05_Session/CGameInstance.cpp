@@ -87,10 +87,12 @@ void UCGameInstance::CreateSession()
 {
 	if (SessionInterface.IsValid())
 	{
+		//Todo. OSS에 따라서 세션 생성 옵션 세팅을 바꿀거다.
 		FOnlineSessionSettings sessionSettings;
-		sessionSettings.bIsLANMatch = true;
+		sessionSettings.bIsLANMatch = false;
 		sessionSettings.NumPublicConnections = 5;
 		sessionSettings.bShouldAdvertise = true;
+		sessionSettings.bUsesPresence = true;
 
 		SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
 	}
@@ -121,7 +123,9 @@ void UCGameInstance::FindSession()
 	{
 		CLog::Log("Starting Find Session");
 
-		SessionSearch->bIsLanQuery = true;
+		//SessionSearch->bIsLanQuery = true;
+		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
 }
