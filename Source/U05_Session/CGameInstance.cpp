@@ -6,7 +6,7 @@
 #include "Widgets/CMenu.h"
 #include "Widgets/CMenuBase.h"
 
-const static FName SESSION_NAME = TEXT("MySession");
+const static FName SESSION_NAME = TEXT("GameSession");
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -87,12 +87,22 @@ void UCGameInstance::CreateSession()
 {
 	if (SessionInterface.IsValid())
 	{
-		//Todo. OSS에 따라서 세션 생성 옵션 세팅을 바꿀거다.
 		FOnlineSessionSettings sessionSettings;
-		sessionSettings.bIsLANMatch = false;
+
+		if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+		{
+			sessionSettings.bIsLANMatch = true;
+			sessionSettings.bUsesPresence = false;
+		}
+		else
+		{
+			sessionSettings.bIsLANMatch = false;
+			sessionSettings.bUsesPresence = true;
+		}
+
 		sessionSettings.NumPublicConnections = 5;
 		sessionSettings.bShouldAdvertise = true;
-		sessionSettings.bUsesPresence = true;
+		sessionSettings.Set(TEXT("SessionKey"), FString("SessionName"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 		SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
 	}
@@ -164,7 +174,7 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 		Menu != nullptr &&
 		SessionSearch.IsValid())
 	{
-		TArray<FString> foundSession;
+		TArray<FSessionData> foundSession;
 		
 		CLog::Log("Finished Find Sessoin");
 
@@ -174,10 +184,25 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 			CLog::Log(" -> Session ID : " + searchResult.GetSessionIdStr());
 			CLog::Log(" -> Ping : " + FString::FromInt(searchResult.PingInMs));
 
-			foundSession.Add(searchResult.GetSessionIdStr());
+			FSessionData data;
+			data.Name = searchResult.GetSessionIdStr();
+			data.MaxPlayers = searchResult.Session.SessionSettings.NumPublicConnections;
+			data.CurrentPlayers = data.MaxPlayers - searchResult.Session.NumOpenPublicConnections;
+			data.HostUserName = searchResult.Session.OwningUserName;
+
+			FString sessionName;
+			if (searchResult.Session.SessionSettings.Get(TEXT("SessionKey"), sessionName))
+			{
+				CLog::Log("Session.Get().Value => " + sessionName);
+			}
+			else
+			{
+				CLog::Log("Session Settings Key Not Found");
+			}
+
+			foundSession.Add(data);
 		}
 		CLog::Log("===========================================");
-
 
 		Menu->SetSessionList(foundSession);
 	}
