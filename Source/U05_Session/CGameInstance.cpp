@@ -7,6 +7,7 @@
 #include "Widgets/CMenuBase.h"
 
 const static FName SESSION_NAME = TEXT("GameSession");
+const static FName SESSION_SETTINGS_KEY = TEXT("SessionKey");
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -67,8 +68,10 @@ void UCGameInstance::LoadInGameMenu()
 	inGameWidget->Attach();
 }
 
-void UCGameInstance::Host()
+void UCGameInstance::Host(const FString& InSessionName)
 {
+	DesiredSessionName = InSessionName;
+
 	if (SessionInterface.IsValid())
 	{
 	 	auto session = SessionInterface->GetNamedSession(SESSION_NAME);
@@ -102,7 +105,7 @@ void UCGameInstance::CreateSession()
 
 		sessionSettings.NumPublicConnections = 5;
 		sessionSettings.bShouldAdvertise = true;
-		sessionSettings.Set(TEXT("SessionKey"), FString("SessionName"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		sessionSettings.Set(SESSION_SETTINGS_KEY, DesiredSessionName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 		SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
 	}
@@ -159,7 +162,7 @@ void UCGameInstance::OnCreateSessionComplete(FName InSessionName, bool InSuccess
 
 	UWorld* world = GetWorld();
 	CheckNull(world);
-	world->ServerTravel("/Game/Maps/Play?listen");
+	world->ServerTravel("/Game/Maps/Lobby?listen");
 }
 
 void UCGameInstance::OnDestroySessionComplete(FName InSessionName, bool InSuccess)
@@ -185,15 +188,14 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 			CLog::Log(" -> Ping : " + FString::FromInt(searchResult.PingInMs));
 
 			FSessionData data;
-			data.Name = searchResult.GetSessionIdStr();
 			data.MaxPlayers = searchResult.Session.SessionSettings.NumPublicConnections;
 			data.CurrentPlayers = data.MaxPlayers - searchResult.Session.NumOpenPublicConnections;
 			data.HostUserName = searchResult.Session.OwningUserName;
 
 			FString sessionName;
-			if (searchResult.Session.SessionSettings.Get(TEXT("SessionKey"), sessionName))
+			if (searchResult.Session.SessionSettings.Get(SESSION_SETTINGS_KEY, sessionName))
 			{
-				CLog::Log("Session.Get().Value => " + sessionName);
+				data.Name = sessionName;
 			}
 			else
 			{

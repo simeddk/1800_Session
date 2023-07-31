@@ -37,6 +37,7 @@ private:
 	UFUNCTION()	void JoinServer();
 	UFUNCTION()	void OpenJoinMenu();
 	UFUNCTION()	void OpenMainMenu();
+	UFUNCTION()	void OpenHostMenu();
 	UFUNCTION()	void QuitGame();
 
 private:
@@ -56,6 +57,12 @@ private:
 		class UButton* ConfirmJoinMenuButton;
 
 	UPROPERTY(meta = (BindWidget))
+		class UButton* CancelHostMenuButton;
+
+	UPROPERTY(meta = (BindWidget))
+		class UButton* ConfirmHostMenuButton;
+
+	UPROPERTY(meta = (BindWidget))
 		class UButton* QuitButton;
 
 	UPROPERTY(meta = (BindWidget))
@@ -68,7 +75,13 @@ private:
 		class UWidget* JoinMenu;
 
 	UPROPERTY(meta = (BindWidget))
+		class UWidget* HostMenu;
+
+	UPROPERTY(meta = (BindWidget))
 		class UScrollBox* SessionList;
+
+	UPROPERTY(meta = (BindWidget))
+		class UEditableTextBox* SessionNameText;
 
 private:
 	TSubclassOf<class UUserWidget> SessionRowClass;

@@ -4,6 +4,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
+#include "Components/EditableTextBox.h"
 #include "CSessionRow.h"
 
 UCMenu::UCMenu(const FObjectInitializer& ObjectInitializer)
@@ -17,7 +18,13 @@ bool UCMenu::Initialize()
 	CheckFalseResult(bSuccess, false);
 
 	CheckNullResult(HostButton, false);
-	HostButton->OnClicked.AddDynamic(this, &UCMenu::HostServer);
+	HostButton->OnClicked.AddDynamic(this, &UCMenu::OpenHostMenu);
+
+	CheckNullResult(CancelHostMenuButton, false);
+	CancelHostMenuButton->OnClicked.AddDynamic(this, &UCMenu::OpenMainMenu);
+
+	CheckNullResult(ConfirmHostMenuButton, false);
+	ConfirmHostMenuButton->OnClicked.AddDynamic(this, &UCMenu::HostServer);
 
 	CheckNullResult(JoinButton, false);
 	JoinButton->OnClicked.AddDynamic(this, &UCMenu::OpenJoinMenu);
@@ -70,7 +77,8 @@ void UCMenu::HostServer()
 {
 	CheckNull(OwingGameInstance);
 
-	OwingGameInstance->Host();
+	FString sessionName = SessionNameText->Text.ToString();
+	OwingGameInstance->Host(sessionName);
 }
 
 void UCMenu::JoinServer()
@@ -108,6 +116,14 @@ void UCMenu::OpenMainMenu()
 	CheckNull(MainMenu);
 
 	MenuSwitcher->SetActiveWidget(MainMenu);
+}
+
+void UCMenu::OpenHostMenu()
+{
+	CheckNull(MenuSwitcher);
+	CheckNull(HostMenu);
+
+	MenuSwitcher->SetActiveWidget(HostMenu);
 }
 
 void UCMenu::QuitGame()
