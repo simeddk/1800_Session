@@ -1,5 +1,6 @@
 #include "CLobbyGameMode.h"
 #include "Global.h"
+#include "CGameInstance.h"
 
 void ACLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -9,9 +10,11 @@ void ACLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 	if (NumberOfPlayers >= 3)
 	{
-		UWorld* world = GetWorld();
-		CheckNull(world);
-		world->ServerTravel("/Game/Maps/Play?listen");
+		CLog::Print("Ready to Player");
+
+		FTimerHandle timerHandle;
+		GetWorldTimerManager().SetTimer(timerHandle, this, &ACLobbyGameMode::StartGame, 10);
+
 	}
 }
 
@@ -21,4 +24,17 @@ void ACLobbyGameMode::Logout(AController* Exiting)
 
 	--NumberOfPlayers;
 
+}
+
+void ACLobbyGameMode::StartGame()
+{
+	UCGameInstance* gameInstance = Cast<UCGameInstance>(GetGameInstance());
+	CheckNull(gameInstance);
+	gameInstance->StartSession();
+
+	UWorld* world = GetWorld();
+	CheckNull(world);
+
+	bUseSeamlessTravel = true;
+	world->ServerTravel("/Game/Maps/Play?listen");
 }

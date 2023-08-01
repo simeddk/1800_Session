@@ -6,7 +6,7 @@
 #include "Widgets/CMenu.h"
 #include "Widgets/CMenuBase.h"
 
-const static FName SESSION_NAME = TEXT("GameSession");
+const static FName SESSION_NAME = TEXT("GameSession99");
 const static FName SESSION_SETTINGS_KEY = TEXT("SessionKey");
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& ObjectInitializer)
@@ -44,6 +44,9 @@ void UCGameInstance::Init()
 		CLog::Log("OSS Not Found!");
 	}
 
+
+	if (!!GEngine)
+		GEngine->OnNetworkFailure().AddUObject(this, &UCGameInstance::OnNetworkFailure);
 }
 
 void UCGameInstance::LoadMenu()
@@ -103,12 +106,19 @@ void UCGameInstance::CreateSession()
 			sessionSettings.bUsesPresence = true;
 		}
 
-		sessionSettings.NumPublicConnections = 5;
+		sessionSettings.NumPublicConnections = 4;
 		sessionSettings.bShouldAdvertise = true;
 		sessionSettings.Set(SESSION_SETTINGS_KEY, DesiredSessionName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 		SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
 	}
+}
+
+void UCGameInstance::StartSession()
+{
+	CheckFalse(SessionInterface.IsValid());
+
+	SessionInterface->StartSession(SESSION_NAME);
 }
 
 void UCGameInstance::Join(uint32 InSessionIndex)
@@ -234,5 +244,12 @@ void UCGameInstance::OnJoinSessionComplete(FName InSessionName, EOnJoinSessionCo
 	APlayerController* controller = GetFirstLocalPlayerController();
 	CheckNull(controller);
 	controller->ClientTravel(address, ETravelType::TRAVEL_Absolute);
+}
+
+void UCGameInstance::OnNetworkFailure(UWorld* InWorld, UNetDriver* InNetDriver, ENetworkFailure::Type InFailureReason, const FString& InErrorMessage)
+{
+	CLog::Print("Network Error Message :  " + InErrorMessage);
+
+	ReturnToMainMenu();
 }
 
